@@ -1,0 +1,5 @@
+{
+  "ignore": ["node_modules", "*.css"],
+  "watch": ["src"],
+  "ext": "*"
+}

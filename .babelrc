@@ -1,0 +1,26 @@
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "chrome": "73",
+
+          "esmodules": true
+        }
+      }
+    ],
+    "@babel/preset-react",
+    [
+      "@babel/preset-typescript",
+      {
+        "targets": {
+          "chrome": "73",
+
+          "esmodules": true
+        }
+      }
+    ]
+  ],
+  "plugins": ["transform-class-properties"]
+}
