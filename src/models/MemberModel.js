@@ -1,13 +1,11 @@
 import mongoose, { Schema } from 'mongoose';
 
 let MemberSchema = new Schema({
-  memberId: Schema.Types.ObjectId,
   firstName: Schema.Types.String,
   lastName: Schema.Types.String,
   birthDate: Schema.Types.Date,
   email: Schema.Types.String,
-  //   direction: Schema.Types.ObjectId,
-  direction: Schema.Types.String,
+  directionId: Schema.Types.ObjectId,
   sex: Schema.Types.String,
   education: Schema.Types.String,
   universityAverageScore: Schema.Types.Number,
