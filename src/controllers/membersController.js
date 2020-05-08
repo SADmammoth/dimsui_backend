@@ -1,5 +1,4 @@
 import MemberModel from '../models/MemberModel';
-import DirectionModel from '../models/DirectionModel';
 
 exports.getMembers = async (req, res) => {
   res.json((await MemberModel.find({}).exec()).filter((el) => !!el));
@@ -52,7 +51,7 @@ exports.editMember = async (req, res) => {
     }
   });
 
-  let memberModel = await MemberModel.updateOne({ _id: memberId }, editObject);
+  let memberModel = await MemberModel.findByIdAndUpdate(memberId, editObject);
 
   res.json(memberModel);
 };

@@ -1,9 +1,9 @@
 import mongoose, { Schema } from 'mongoose';
 
-let MemberSchema = new Schema({
+let DirectionSchema = new Schema({
   name: Schema.Types.String,
 });
 
-let MemberModel = mongoose.model('direction', MemberSchema);
+let DirectionModel = mongoose.model('direction', DirectionSchema);
 
-export default MemberModel;
+export default DirectionModel;
