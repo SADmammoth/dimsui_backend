@@ -103,10 +103,32 @@ exports.assignTask = async (req, res) => {
   const userIds = req.body;
   let memberTaskModels = [];
 
+  const alreadyAssigned = (await _getAssigned(taskId)).map(
+    ({ userId }) => userId
+  );
+
+  await Promise.all(
+    userIds.map(async (userId) => {
+      if (!alreadyAssigned.includes(userId)) {
+        memberTaskModels.push(
+          await MemberTaskModel.create({ taskId, userId, stateId })
+        );
+      }
+    })
+  );
+
+  res.json(memberTaskModels);
+};
+
+exports.unassignTask = async (req, res) => {
+  const { taskId } = req.params;
+  const userIds = req.body;
+  let memberTaskModels = [];
+
   await Promise.all(
     userIds.map(async (userId) => {
       memberTaskModels.push(
-        await MemberTaskModel.create({ taskId, userId, stateId })
+        await MemberTaskModel.findOneAndDelete({ taskId, userId })
       );
     })
   );

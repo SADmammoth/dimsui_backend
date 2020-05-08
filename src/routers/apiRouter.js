@@ -19,6 +19,7 @@ router.get(
 );
 router.get('/tasks/', tasksController.getTasks);
 router.get('/tasks/:id/assigned', tasksController.getAssigned);
+router.put('/members/tasks/:taskId', tasksController.unassignTask);
 router.post('/tasks/', tasksController.addTask);
 router.put('/tasks/:id', tasksController.editTask);
 router.post('/tasks/:taskId', tasksController.assignTask);
