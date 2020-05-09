@@ -9,9 +9,9 @@ router.get('/directions', databaseInit.getDirections);
 router.post('/directions', databaseInit.createDirections);
 router.post('/states', databaseInit.createTaskStates);
 
-router.get('/members/', membersController.getMembers);
-router.post('/members/', membersController.addMember);
-router.put('/members/:id', membersController.editMember);
+router.get('/members/profile', membersController.getMembers);
+router.post('/members/profile', membersController.addMember);
+router.put('/members/:id/profile', membersController.editMember);
 
 router.get(
   '/tasks/?includeAssigned=true',
@@ -23,6 +23,13 @@ router.put('/members/tasks/:taskId', tasksController.unassignTask);
 router.post('/tasks/', tasksController.addTask);
 router.put('/tasks/:id', tasksController.editTask);
 router.post('/tasks/:taskId', tasksController.assignTask);
-router.get('/members/:memberId/tasks', tasksController.getMemberTasks);
+router.get('/members/:userId/tasks', tasksController.getMemberTasks);
+
+router.get('/member/:userId/tracks', tasksController.getMemberTracks);
+router.post(
+  '/member/:userId/tasks/:memberTaskId/track',
+  tasksController.trackTask
+);
+router.get('/member/:userId/progress', tasksController.getMemberProgress);
 
 export default router;

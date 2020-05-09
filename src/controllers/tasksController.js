@@ -2,6 +2,7 @@ import TaskModel from '../models/TaskModel';
 import MemberTaskModel from '../models/MemberTaskModel';
 import TaskStateModel from '../models/TaskStateModel';
 import MemberModel from '../models/MemberModel';
+import TrackModel from '../models/TrackModel';
 
 exports.getTasks = async (req, res) => {
   if (req.query.includeAssigned) {
@@ -137,9 +138,9 @@ exports.unassignTask = async (req, res) => {
 };
 
 exports.getMemberTasks = async (req, res) => {
-  const { memberId } = req.params;
+  const { userId } = req.params;
 
-  let memberTasks = await MemberTaskModel.find({ userId: memberId });
+  let memberTasks = await MemberTaskModel.find({ userId: userId });
   console.log(memberTasks);
   if (!memberTasks || !memberTasks.length) {
     res.json([]);
@@ -172,4 +173,75 @@ exports.getMemberTasks = async (req, res) => {
   );
 
   res.json(memberTasks);
+};
+
+exports.getMemberTracks = async (req, res) => {
+  const { userId } = req.params;
+  const memberTasks = await MemberTaskModel.find({ userId });
+
+  const tracks = await Promise.all(
+    memberTasks.map(async ({ _id }) => {
+      const { memberTaskId, trackNote, trackDate } = (
+        await TrackModel.find({ memberTaskId: _id })
+      )[0];
+      const { taskId } = await MemberTaskModel.findById(memberTaskId);
+      const { taskName } = await TaskModel.findById(taskId);
+
+      return {
+        taskId,
+        userId,
+        taskName,
+        trackNote,
+        trackDate,
+      };
+    })
+  );
+
+  res.json(tracks);
+};
+
+exports.trackTask = async (req, res) => {
+  const { memberTaskId } = req.params;
+  const { trackNote, trackDate } = req.body;
+
+  const trackedTask = await TrackModel.find({ memberTaskId });
+
+  if (!trackedTask || !trackedTask.length) {
+    res.json({ message: 'Task is already tracked' });
+    return;
+  }
+
+  const taskModel = await TrackModel.create({
+    memberTaskId,
+    trackNote,
+    trackDate,
+  });
+
+  res.json(taskModel);
+};
+
+exports.getMemberProgress = async (req, res) => {
+  const { userId } = req.params;
+  const memberTasks = await MemberTaskModel.find({ userId });
+
+  const progress = await Promise.all(
+    memberTasks.map(async ({ _id }) => {
+      const { _id: taskTrackId, memberTaskId, trackNote, trackDate } = (
+        await TrackModel.find({ memberTaskId: _id })
+      )[0];
+      const { taskId } = await MemberTaskModel.findById(memberTaskId);
+      const { taskName } = await TaskModel.findById(taskId);
+
+      return {
+        taskId,
+        userId,
+        taskTrackId,
+        taskName,
+        trackNote,
+        trackDate,
+      };
+    })
+  );
+
+  res.json(progress);
 };
