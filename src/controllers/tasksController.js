@@ -251,16 +251,17 @@ exports.getMemberProgress = async (req, res) => {
       const { taskName } = await TaskModel.findById(taskId);
 
       return {
+        _id: taskTrackId,
         taskId,
         userId,
-        taskTrackId,
+        memberTaskId,
         taskName,
         trackNote,
         trackDate,
       };
     })
   );
-
+  console.log(progress);
   res.json(progress);
 };
 
