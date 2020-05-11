@@ -14,14 +14,6 @@ exports.getTasks = async (req, res) => {
 };
 
 const _getAssigned = async (taskId) => {
-  const tasks = await TaskModel.findById(taskId);
-
-  if (!tasks) {
-    res.status(404);
-    res.send();
-    return;
-  }
-
   const userIds = (await MemberTaskModel.find({ taskId })).map((memberTask) => {
     const { _id: memberTaskId, userId } = memberTask;
     return { memberTaskId, userId };
@@ -39,7 +31,7 @@ const _getAssigned = async (taskId) => {
 
 exports.getAssigned = async (req, res) => {
   const taskId = req.params.id;
-  const assigned = _getAssigned(taskId);
+  const assigned = await _getAssigned(taskId);
   res.json(assigned);
 };
 
@@ -65,6 +57,7 @@ exports.getTasksWithAssigned = async (req, res) => {
       }
     )
   );
+
   res.json(tasksWithAssigned);
 };
 
@@ -141,13 +134,14 @@ exports.getMemberTasks = async (req, res) => {
   const { userId } = req.params;
 
   let memberTasks = await MemberTaskModel.find({ userId: userId });
-  console.log(memberTasks);
+
   if (!memberTasks || !memberTasks.length) {
     res.json([]);
     return;
   }
 
-  memberTasks = await Promise.all(
+  console.log(memberTasks);
+  const memberTasksData = await Promise.all(
     memberTasks.map(async (memberTask) => {
       const {
         taskName,
@@ -155,12 +149,12 @@ exports.getMemberTasks = async (req, res) => {
         startDate,
         deadlineDate,
       } = await TaskModel.findById(memberTask.taskId);
-
-      const { taskId, userId, stateId } = memberTask;
+      const { _id: memberTaskId, taskId, userId, stateId } = memberTask;
 
       const state = (await TaskStateModel.findById(stateId)).stateName;
 
       return {
+        _id: memberTaskId,
         taskId,
         userId,
         state,
@@ -172,7 +166,7 @@ exports.getMemberTasks = async (req, res) => {
     })
   );
 
-  res.json(memberTasks);
+  res.json(memberTasksData);
 };
 
 exports.getMemberTracks = async (req, res) => {
@@ -181,13 +175,14 @@ exports.getMemberTracks = async (req, res) => {
 
   const tracks = await Promise.all(
     memberTasks.map(async ({ _id }) => {
-      const { memberTaskId, trackNote, trackDate } = (
+      const { _id: trackId, memberTaskId, trackNote, trackDate } = (
         await TrackModel.find({ memberTaskId: _id })
       )[0];
       const { taskId } = await MemberTaskModel.findById(memberTaskId);
       const { taskName } = await TaskModel.findById(taskId);
 
       return {
+        _id: trackId,
         taskId,
         userId,
         taskName,
@@ -244,4 +239,30 @@ exports.getMemberProgress = async (req, res) => {
   );
 
   res.json(progress);
+};
+
+exports._deleteMemberTasks = async (userId) => {
+  const deletedTasks = await MemberTaskModel.deleteMany({
+    userId,
+  });
+  return deletedTasks;
+};
+exports._deleteMemberTracks = async (userId) => {
+  const deletedTracks = await TrackModel.deleteMany({
+    userId,
+  });
+  return deletedTracks;
+};
+
+exports.deleteTask = async (req, res) => {
+  const taskId = req.params.id;
+
+  const memberTasks = await MemberTaskModel.deleteMany({
+    taskId,
+  });
+  const tracks = await TrackModel.deleteMany({
+    taskId,
+  });
+  const deletedTask = await TaskModel.findByIdAndDelete(taskId);
+  res.json({ ...deletedTask.toObject(), memberTasks, tracks });
 };
