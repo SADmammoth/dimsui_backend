@@ -3,6 +3,7 @@ import MemberTaskModel from '../models/MemberTaskModel';
 import TaskStateModel from '../models/TaskStateModel';
 import MemberModel from '../models/MemberModel';
 import TrackModel from '../models/TrackModel';
+import typeChecker from '../models/typeChecker';
 
 exports.getTasks = async (req, res) => {
   if (req.query.includeAssigned) {
@@ -133,6 +134,11 @@ exports.unassignTask = async (req, res) => {
 exports.getMemberTasks = async (req, res) => {
   const { userId } = req.params;
 
+  if (!typeChecker.checkObjectId(userId)) {
+    res.status(404);
+    res.send('UserId not found');
+    return;
+  }
   let memberTasks = await MemberTaskModel.find({ userId: userId });
 
   if (!memberTasks || !memberTasks.length) {
@@ -140,7 +146,6 @@ exports.getMemberTasks = async (req, res) => {
     return;
   }
 
-  console.log(memberTasks);
   const memberTasksData = await Promise.all(
     memberTasks.map(async (memberTask) => {
       const {
@@ -174,25 +179,27 @@ exports.getMemberTracks = async (req, res) => {
   const memberTasks = await MemberTaskModel.find({ userId });
 
   const tracks = await Promise.all(
-    memberTasks.map(async ({ _id }) => {
-      const { _id: trackId, memberTaskId, trackNote, trackDate } = (
-        await TrackModel.find({ memberTaskId: _id })
-      )[0];
-      const { taskId } = await MemberTaskModel.findById(memberTaskId);
+    memberTasks.map(async ({ _id: memberTaskId, taskId }) => {
+      const tracks = await TrackModel.find({ memberTaskId });
       const { taskName } = await TaskModel.findById(taskId);
 
-      return {
-        _id: trackId,
-        taskId,
-        userId,
-        taskName,
-        trackNote,
-        trackDate,
-      };
+      return tracks.map(
+        ({ _id: trackId, memberTaskId, trackNote, trackDate }) => {
+          return {
+            _id: trackId,
+            memberTaskId,
+            taskId,
+            userId,
+            taskName,
+            trackNote,
+            trackDate,
+          };
+        }
+      );
     })
   );
 
-  res.json(tracks);
+  res.json(tracks.flat());
 };
 
 exports.trackTask = async (req, res) => {
@@ -213,6 +220,22 @@ exports.trackTask = async (req, res) => {
   });
 
   res.json(taskModel);
+};
+
+exports.editTrack = async (req, res) => {
+  const trackId = req.params.id;
+  const { trackDate, trackNote } = req.body;
+  const editedTrack = await TrackModel.findByIdAndUpdate(trackId, {
+    trackDate,
+    trackNote,
+  });
+  res.json(editedTrack);
+};
+
+exports.deleteTrack = async (req, res) => {
+  const trackId = req.params.id;
+  const deletedTrack = await TrackModel.findByIdAndDelete(trackId);
+  res.json(deletedTrack);
 };
 
 exports.getMemberProgress = async (req, res) => {

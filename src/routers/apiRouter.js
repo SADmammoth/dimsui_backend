@@ -29,6 +29,9 @@ router.post(
   '/member/:userId/tasks/:memberTaskId/track',
   tasksController.trackTask
 );
+router.put('/tracks/:id', tasksController.editTrack);
+router.delete('/tracks/:id', tasksController.deleteTrack);
+
 router.get('/member/:userId/progress', tasksController.getMemberProgress);
 
 export default router;
