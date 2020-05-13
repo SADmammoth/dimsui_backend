@@ -22,7 +22,7 @@ app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 
 app.use(cors());
-app.use('/api', apiRouter);
+app.use('/api', passport.authenticate('jwt', { session: false }), apiRouter);
 app.use('/auth', authRouter);
 
 app.listen(port);

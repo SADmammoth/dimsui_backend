@@ -12,7 +12,7 @@ router.post('/users', async (req, res) => {
   res.json(await UserModel.create(req.body));
 });
 
-router.post('/login', async (req, res, next) => {
+router.post('/users/login', async (req, res, next) => {
   await passport.authenticate('local', function (err, user, info) {
     if (user == false) {
       res.send('Login failed');
@@ -21,29 +21,26 @@ router.post('/login', async (req, res, next) => {
 
       const payload = {
         userId: user.userId,
+        role: user.role,
         login: user.login,
       };
       const token = jwt.sign(payload, process.env.AUTH_SECRET);
 
       res.json({
-        user: user.login,
         userId: user.userId,
+        role: user.role,
+        login: user.login,
         token: 'JWT ' + token,
       });
     }
   })(req, res, next);
 });
 
-router.get('/custom', async (req, res, next) => {
-  await passport.authenticate('jwt', function (error, user) {
-    console.log(user, error);
-    if (user) {
-      res.send(user.login + ' authorised');
-    } else {
-      res.send('No such user');
-      console.log('err', error);
-    }
-  })(req, res, next);
+router.get('/echo', passport.authenticate('jwt', { session: false }), function (
+  req,
+  res
+) {
+  res.json({ userId: req.user.userId, role: req.user.role });
 });
 
 export default router;
