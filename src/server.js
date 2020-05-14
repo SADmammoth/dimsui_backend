@@ -14,9 +14,10 @@ mongoose.connect(process.env.MONGODB_URL, {
   useNewUrlParser: true,
 });
 
+mongoose.set('useCreateIndex', true);
+
 app.use(cookieParser());
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
