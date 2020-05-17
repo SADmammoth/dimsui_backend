@@ -290,3 +290,15 @@ exports.deleteTask = async (req, res) => {
   const deletedTask = await TaskModel.findByIdAndDelete(taskId);
   res.json({ ...deletedTask.toObject(), memberTasks, tracks });
 };
+
+exports.setMemberTaskState = async (req, res) => {
+  const { taskId, userId } = req.prams;
+  const { state } = req.body;
+  const stateId = (await TaskStateModel.find({ stateName: state })).data._id;
+  const updatedTask = await MemberTaskModel.findAndUpdate(
+    { taskId, userId },
+    { stateId }
+  );
+
+  return updatedTask;
+};

@@ -35,8 +35,9 @@ tasksRouter.post(
   roleFilter('admin', 'mentor'),
   tasksController.addTask
 );
+
 tasksRouter.post(
-  '/tasks/:taskId',
+  '/tasks/:taskId/members',
   roleFilter('admin', 'mentor'),
   tasksController.assignTask
 );
@@ -45,6 +46,12 @@ tasksRouter.put(
   '/tasks/:taskId',
   roleFilter('admin', 'mentor'),
   tasksController.editTask
+);
+
+tasksRouter.put(
+  '/tasks/:taskId?member=:userId/state',
+  roleFilter('admin', 'mentor'),
+  tasksController.setMemberTaskState
 );
 
 tasksRouter.put(
