@@ -6,58 +6,63 @@ import userIdFilter from '../helpers/userIdFilter';
 var tasksRouter = express.Router();
 
 tasksRouter.get(
+  '/tasks',
+  roleFilter('admin', 'mentor'),
+  tasksController.getTasks
+);
+
+tasksRouter.get(
   '/tasks?includeAssigned=true',
   roleFilter('admin', 'mentor'),
   tasksController.getTasksWithAssigned
 );
 
 tasksRouter.get(
-  '/tasks/',
-  roleFilter('admin', 'mentor'),
-  tasksController.getTasks
+  '/tasks?member=:userId',
+  roleFilter('admin', 'member'),
+  userIdFilter,
+  tasksController.getMemberTasks
 );
 
 tasksRouter.get(
-  '/tasks/:id/assigned',
+  '/tasks/:taskId/members',
   roleFilter('admin', 'mentor'),
-  tasksController.getAssigned
-);
-
-tasksRouter.put(
-  '/members/tasks/:taskId',
-  roleFilter('admin', 'mentor'),
-  tasksController.unassignTask
+  tasksController.getAssignedTo
 );
 
 tasksRouter.post(
-  '/tasks/',
+  '/tasks',
   roleFilter('admin', 'mentor'),
   tasksController.addTask
 );
-
-tasksRouter.put(
-  '/tasks/:id',
-  roleFilter('admin', 'mentor'),
-  tasksController.editTask
-);
-
 tasksRouter.post(
   '/tasks/:taskId',
   roleFilter('admin', 'mentor'),
   tasksController.assignTask
 );
 
-tasksRouter.get(
-  '/members/:userId/tasks',
-  roleFilter('admin', 'member'),
-  userIdFilter,
-  tasksController.getMemberTasks
+tasksRouter.put(
+  '/tasks/:taskId',
+  roleFilter('admin', 'mentor'),
+  tasksController.editTask
+);
+
+tasksRouter.put(
+  '/tasks/:taskId/members',
+  roleFilter('admin', 'mentor'),
+  tasksController.unassignTask
 );
 
 tasksRouter.delete(
-  '/tasks/:id',
+  '/tasks/:taskId',
   roleFilter('admin', 'mentor'),
   tasksController.deleteTask
+);
+
+progressRouter.get(
+  '/tracks?member=:userId/progress',
+  roleFilter('admin', 'mentor'),
+  tasksController.getMemberProgress
 );
 
 export default tasksRouter;

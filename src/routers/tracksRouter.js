@@ -6,14 +6,20 @@ import userIdFilter from '../helpers/userIdFilter';
 var tracksRouter = express.Router();
 
 tracksRouter.get(
-  '/member/:userId/tracks',
+  '/tracks?member=:userId',
   roleFilter('member'),
   userIdFilter,
   tasksController.getMemberTracks
 );
 
+progressRouter.get(
+  '/tracks?member=:userId/progress',
+  roleFilter('admin', 'mentor'),
+  tasksController.getMemberProgress
+);
+
 tracksRouter.post(
-  '/member/:userId/tasks/:memberTaskId/track',
+  '/tracks?member=:userId&task=:memberTaskId',
   roleFilter('member'),
   userIdFilter,
   tasksController.trackTask

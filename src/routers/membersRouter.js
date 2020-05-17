@@ -5,13 +5,13 @@ import roleFilter from '../helpers/roleFilter';
 var membersRouter = express.Router();
 
 membersRouter.get(
-  '/members/profile',
+  '/members/profiles',
   roleFilter('admin', 'mentor'),
   membersController.getMembers
 );
 
 membersRouter.post(
-  '/members/profile',
+  '/members/profiles',
   roleFilter('admin'),
   membersController.addMember
 );
@@ -23,7 +23,7 @@ membersRouter.put(
 );
 
 membersRouter.delete(
-  '/members/:id',
+  '/members/:id/profile',
   roleFilter('admin'),
   membersController.deleteMember
 );
