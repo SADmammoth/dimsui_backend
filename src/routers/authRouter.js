@@ -1,20 +1,23 @@
-import express from 'express';
-import passport from 'passport';
-import jwt from 'jsonwebtoken';
-import UserModel from '../models/UserModel';
-import passportInit from '../passport/passportInit';
+const express = require('express');
+const passport = require('passport');
+const jwt = require('jsonwebtoken');
+const StatusCodes = require('http-status-codes').StatusCodes;
+const UserModel = require('../models/UserModel');
+const passportInit = require('../passport/passportInit');
+const loginDatabaseAdministrator = require('../helpers/loginDatabaseAdministrator');
 
 var authRouter = express.Router();
 
 passportInit();
 
-authRouter.post('/users', async (req, res) => {
-  res.json(await UserModel.create(req.body));
+authRouter.post('/users', loginDatabaseAdministrator, async (req, res) => {
+  res.json(await UserModel.create(req.body.newUser));
 });
 
 authRouter.post('/users/login', async (req, res, next) => {
   await passport.authenticate('local', function (err, user) {
     if (user == false) {
+      res.status(StatusCodes.UNAUTHORIZED);
       res.send('Login failed');
     } else {
       const payload = {
@@ -43,4 +46,4 @@ authRouter.get(
   }
 );
 
-export default authRouter;
+module.exports = authRouter;

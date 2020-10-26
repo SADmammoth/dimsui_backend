@@ -1,66 +1,63 @@
-import MemberModel from '../models/MemberModel';
-import tasksController from './tasksController';
+const retrieveFields = require('../helpers/retrieveFields');
+const MemberModel = require('../models/MemberModel');
+const tasksController = require('./tasksController');
+const responseIfModified = require('../helpers/responseIfModified');
 
 exports.getMembers = async (req, res) => {
-  res.json((await MemberModel.find({}).exec()).filter((el) => !!el));
+  res.json((await MemberModel.find({})).filter((el) => !!el));
 };
 
 exports.addMember = async (req, res) => {
-  const {
-    firstName,
-    lastName,
-    birthDate,
-    email,
-    directionId,
-    sex,
-    education,
-    universityAverageScore,
-    mathScore,
-    address,
-    mobilePhone,
-    skype,
-    startDate,
-  } = req.body;
+  await MemberModel.create(
+    retrieveFields(req.body, [
+      'firstName',
+      'lastName',
+      'birthDate',
+      'email',
+      'directionId',
+      'sex',
+      'education',
+      'universityAverageScore',
+      'mathScore',
+      'address',
+      'mobilePhone',
+      'skype',
+      'startDate',
+    ])
+  );
 
-  let memberModel = await MemberModel.create({
-    firstName,
-    lastName,
-    birthDate,
-    email,
-    directionId,
-    sex,
-    education,
-    universityAverageScore,
-    mathScore,
-    address,
-    mobilePhone,
-    skype,
-    startDate,
-  });
-  res.json(memberModel);
+  res.send();
 };
 
 exports.editMember = async (req, res) => {
-  const memberData = req.body;
+  const { id: memberId } = req.params;
 
-  const memberId = req.params.id;
+  let result = await MemberModel.findByIdAndUpdate(
+    memberId,
+    retrieveFields(req.body, [
+      'firstName',
+      'lastName',
+      'birthDate',
+      'email',
+      'directionId',
+      'sex',
+      'education',
+      'universityAverageScore',
+      'mathScore',
+      'address',
+      'mobilePhone',
+      'skype',
+      'startDate',
+    ])
+  );
 
-  const editObject = {};
-  Object.entries(memberData).forEach(([name, value]) => {
-    if (value) {
-      editObject[name] = value;
-    }
-  });
-
-  let memberModel = await MemberModel.findByIdAndUpdate(memberId, editObject);
-
-  res.json(memberModel);
+  responseIfModified(result, res);
 };
 
 exports.deleteMember = async (req, res) => {
-  const userId = req.params.id;
-  const memberTasks = await tasksController._deleteMemberTasks(userId);
-  const memberTracks = await tasksController._deleteMemberTracks(userId);
-  const deletedMember = await MemberModel.findByIdAndDelete(userId);
-  res.json({ ...deletedMember.toObject(), memberTasks, memberTracks });
+  const { id: userId } = req.params;
+  await tasksController._deleteMemberTasks(userId);
+  await tasksController._deleteMemberTracks(userId);
+  await MemberModel.findByIdAndDelete(userId);
+  res.send();
 };

@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
 
 let DirectionSchema = new Schema({
   name: Schema.Types.String,
@@ -6,4 +7,4 @@ let DirectionSchema = new Schema({
 
 let DirectionModel = mongoose.model('direction', DirectionSchema);
 
-export default DirectionModel;
+module.exports = DirectionModel;

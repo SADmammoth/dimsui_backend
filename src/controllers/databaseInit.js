@@ -1,5 +1,5 @@
-import DirectionModel from '../models/DirectionModel';
-import TaskStateModel from '../models/TaskStateModel';
+const DirectionModel = require('../models/DirectionModel');
+const TaskStateModel = require('../models/TaskStateModel');
 
 exports.createDirections = async (req, res) => {
   const directions = req.body;

@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
 
 let MemberSchema = new Schema({
   firstName: Schema.Types.String,
@@ -18,4 +19,4 @@ let MemberSchema = new Schema({
 
 let MemberModel = mongoose.model('member', MemberSchema);
 
-export default MemberModel;
+module.exports = MemberModel;

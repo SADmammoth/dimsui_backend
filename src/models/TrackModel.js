@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
 
 let TrackSchema = new Schema({
   memberTaskId: Schema.Types.ObjectId,
@@ -8,4 +9,4 @@ let TrackSchema = new Schema({
 
 let TrackModel = mongoose.model('track', TrackSchema);
 
-export default TrackModel;
+module.exports = TrackModel;

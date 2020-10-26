@@ -1,42 +1,45 @@
-import express from 'express';
-import roleFilter from '../helpers/roleFilter';
-import tasksController from '../controllers/tasksController';
-import userIdFilter from '../helpers/userIdFilter';
+const express = require('express');
+const roleFilter = require('../helpers/roleFilter');
+const tasksController = require('../controllers/tasksController');
+const userIdFilter = require('../helpers/userIdFilter');
+const ADMIN = require('../helpers/roles').ADMIN;
+const MENTOR = require('../helpers/roles').MENTOR;
+const MEMBER = require('../helpers/roles').MEMBER;
 
 var tracksRouter = express.Router();
 
 tracksRouter.get(
-  '/tracks?member=:userId',
-  roleFilter('member'),
+  '/tracks',
+  roleFilter(MEMBER),
   userIdFilter,
   tasksController.getMemberTracks
 );
 
-progressRouter.get(
-  '/tracks?member=:userId/progress',
-  roleFilter('admin', 'mentor'),
-  tasksController.getMemberProgress
-);
-
 tracksRouter.post(
-  '/tracks?member=:userId&task=:memberTaskId',
-  roleFilter('member'),
+  '/tracks',
+  roleFilter(MEMBER),
   userIdFilter,
   tasksController.trackTask
 );
 
+tracksRouter.get(
+  '/tracks/progress',
+  roleFilter(ADMIN, MENTOR),
+  tasksController.getMemberProgress
+);
+
 tracksRouter.put(
   '/tracks/:id',
-  roleFilter('member'),
+  roleFilter(MEMBER),
   userIdFilter,
   tasksController.editTrack
 );
 
 tracksRouter.delete(
   '/tracks/:id',
-  roleFilter('member'),
+  roleFilter(MEMBER),
   userIdFilter,
   tasksController.deleteTrack
 );
 
-export default tracksRouter;
+module.exports = tracksRouter;

@@ -1,7 +1,10 @@
-export default function userIdFilter(req, res, next) {
-  if (req.user.role === 'member' && req.user.userId != req.params.userId) {
-    res.status(401).send();
+const roles = require('./roles');
+const StatusCodes = require('http-status-codes').StatusCodes;
+
+module.exports = function userIdFilter(req, res, next) {
+  if (req.user.role === roles.MEMBER && req.user.userId != req.query.member) {
+    res.status(StatusCodes.UNAUTHORIZED).send();
   }
 
   next();
-}
+};

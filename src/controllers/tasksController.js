@@ -1,12 +1,19 @@
-import TaskModel from '../models/TaskModel';
-import MemberTaskModel from '../models/MemberTaskModel';
-import TaskStateModel from '../models/TaskStateModel';
-import MemberModel from '../models/MemberModel';
-import TrackModel from '../models/TrackModel';
-import typeChecker from '../models/typeChecker';
+const TaskModel = require('../models/TaskModel');
+const MemberTaskModel = require('../models/MemberTaskModel');
+const TaskStateModel = require('../models/TaskStateModel');
+const MemberModel = require('../models/MemberModel');
+const TrackModel = require('../models/TrackModel');
+const userIdFilter = require('../helpers/userIdFilter');
+const retrieveFields = require('../helpers/retrieveFields');
+const { StatusCodes } = require('http-status-codes');
+const responseIfModified = require('../helpers/responseIfModified');
 
 exports.getTasks = async (req, res) => {
-  if (req.query.includeAssigned) {
+  const { includeAssigned, member } = req.query;
+
+  if (member) {
+    userIdFilter(req, res, () => exports.getMemberTasks(req, res));
+  } else if (includeAssigned) {
     exports.getTasksWithAssigned(req, res);
   } else {
     const tasks = await TaskModel.find({});
@@ -31,7 +38,7 @@ const _getAssigned = async (taskId) => {
 };
 
 exports.getAssigned = async (req, res) => {
-  const taskId = req.params.id;
+  const { id: taskId } = req.params;
   const assigned = await _getAssigned(taskId);
   res.json(assigned);
 };
@@ -39,57 +46,50 @@ exports.getAssigned = async (req, res) => {
 exports.getTasksWithAssigned = async (req, res) => {
   const tasks = await TaskModel.find({});
   const tasksWithAssigned = await Promise.all(
-    tasks.map(
-      async ({
-        _id: taskId,
-        taskName,
-        taskDescription,
-        startDate,
-        deadlineDate,
-      }) => {
-        return {
-          _id: taskId,
-          taskName,
-          taskDescription,
-          startDate,
-          deadlineDate,
-          assignedTo: await _getAssigned(taskId),
-        };
-      }
-    )
+    tasks.map(async (task) => {
+      return {
+        _id: task._id,
+        ...retrieveFields(task, [
+          'taskName',
+          'taskDescription',
+          'startDate',
+          'deadlineDate',
+        ]),
+        assignedTo: await _getAssigned(task._id),
+      };
+    })
   );
 
   res.json(tasksWithAssigned);
 };
 
 exports.addTask = async (req, res) => {
-  const { taskName, taskDescription, startDate, deadlineDate } = req.body;
+  const task = await TaskModel.create(
+    retrieveFields(req.body, [
+      'taskName',
+      'taskDescription',
+      'startDate',
+      'deadlineDate',
+    ])
+  );
 
-  const taskModel = await TaskModel.create({
-    taskName,
-    taskDescription,
-    startDate,
-    deadlineDate,
-  });
-
-  res.json(taskModel);
+  res.json(task._doc._id);
 };
 
 exports.editTask = async (req, res) => {
-  const tasksData = req.body;
+  const { taskId } = req.params;
 
-  const taskId = req.params.id;
+  const result = await TaskModel.findByIdAndUpdate(
+    taskId,
+    retrieveFields(req.body, [
+      'taskName',
+      'taskDescription',
+      'startDate',
+      'deadlineDate',
+    ])
+  );
 
-  const editObject = {};
-  Object.entries(tasksData).forEach(([name, value]) => {
-    if (value) {
-      editObject[name] = value;
-    }
-  });
-
-  const taskModel = await TaskModel.findByIdAndUpdate(taskId, editObject);
-
-  res.json(taskModel);
+  responseIfModified(result, res);
 };
 
 exports.assignTask = async (req, res) => {
@@ -112,7 +112,7 @@ exports.assignTask = async (req, res) => {
     })
   );
 
-  res.json(memberTaskModels);
+  res.json();
 };
 
 exports.unassignTask = async (req, res) => {
@@ -128,19 +128,20 @@ exports.unassignTask = async (req, res) => {
     })
   );
 
-  res.json(memberTaskModels);
+  res.send();
 };
 
 exports.getMemberTasks = async (req, res) => {
-  const { userId } = req.params;
+  const { member: userId } = req.query;
+  const user = await MemberModel.find({ userId });
 
-  if (!typeChecker.checkObjectId(userId)) {
-    res.status(404);
+  if (!user) {
+    res.status(StatusCodes.NOT_FOUND);
     res.send('UserId not found');
     return;
   }
-  let memberTasks = await MemberTaskModel.find({ userId: userId });
 
+  let memberTasks = await MemberTaskModel.find({ userId });
   if (!memberTasks || !memberTasks.length) {
     res.json([]);
     return;
@@ -176,6 +177,14 @@ exports.getMemberTasks = async (req, res) => {
 
 exports.getMemberTracks = async (req, res) => {
   const { userId } = req.params;
+  const user = await MemberModel.find({ userId });
+
+  if (!user) {
+    res.status(StatusCodes.NOT_FOUND);
+    res.send('UserId not found');
+    return;
+  }
+
   const memberTasks = await MemberTaskModel.find({ userId });
 
   const tracks = await Promise.all(
@@ -199,54 +208,65 @@ exports.getMemberTracks = async (req, res) => {
     })
   );
 
-  res.json(tracks.flat());
+  res.json(tracks);
 };
 
 exports.trackTask = async (req, res) => {
-  const { memberTaskId } = req.params;
+  const { memberTaskId } = req.query;
   const { trackNote, trackDate } = req.body;
 
   const trackedTask = await TrackModel.find({ memberTaskId });
 
   if (!trackedTask || !trackedTask.length) {
+    res.status(StatusCodes.NOT_MODIFIED);
     res.json({ message: 'Task is already tracked' });
     return;
   }
 
-  const taskModel = await TrackModel.create({
+  await TrackModel.create({
     memberTaskId,
     trackNote,
     trackDate,
   });
 
-  res.json(taskModel);
+  res.send();
 };
 
 exports.editTrack = async (req, res) => {
   const trackId = req.params.id;
   const { trackDate, trackNote } = req.body;
-  const editedTrack = await TrackModel.findByIdAndUpdate(trackId, {
+  const result = await TrackModel.findByIdAndUpdate(trackId, {
     trackDate,
     trackNote,
   });
-  res.json(editedTrack);
+
+  responseIfModified(result, res);
 };
 
 exports.deleteTrack = async (req, res) => {
   const trackId = req.params.id;
-  const deletedTrack = await TrackModel.findByIdAndDelete(trackId);
-  res.json(deletedTrack);
+  const result = await TrackModel.findByIdAndDelete(trackId);
+
+  responseIfModified(result, res);
 };
 
 exports.getMemberProgress = async (req, res) => {
-  const { userId } = req.params;
+  const { member: userId } = req.query;
   const memberTasks = await MemberTaskModel.find({ userId });
 
   const progress = await Promise.all(
     memberTasks.map(async ({ _id }) => {
-      const { _id: taskTrackId, memberTaskId, trackNote, trackDate } = (
-        await TrackModel.find({ memberTaskId: _id })
-      )[0];
+      const track = await TrackModel.findOne({ memberTaskId: _id });
+      if (!track) {
+        res.json([]);
+        return;
+      }
+      const {
+        _id: taskTrackId,
+        memberTaskId,
+        trackNote,
+        trackDate,
+      } = track._doc;
       const { taskId } = await MemberTaskModel.findById(memberTaskId);
       const { taskName } = await TaskModel.findById(taskId);
 
@@ -261,7 +281,7 @@ exports.getMemberProgress = async (req, res) => {
       };
     })
   );
-  console.log(progress);
+
   res.json(progress);
 };
 
@@ -279,26 +299,29 @@ exports._deleteMemberTracks = async (userId) => {
 };
 
 exports.deleteTask = async (req, res) => {
-  const taskId = req.params.id;
+  const { taskId } = req.params;
 
-  const memberTasks = await MemberTaskModel.deleteMany({
+  await MemberTaskModel.deleteMany({
     taskId,
   });
-  const tracks = await TrackModel.deleteMany({
+  await TrackModel.deleteMany({
     taskId,
   });
-  const deletedTask = await TaskModel.findByIdAndDelete(taskId);
-  res.json({ ...deletedTask.toObject(), memberTasks, tracks });
+  await TaskModel.findByIdAndDelete(taskId);
+
+  res.send();
 };
 
 exports.setMemberTaskState = async (req, res) => {
-  const { taskId, userId } = req.prams;
-  const { state } = req.body;
-  const stateId = (await TaskStateModel.find({ stateName: state })).data._id;
-  const updatedTask = await MemberTaskModel.findAndUpdate(
+  const { taskId } = req.params;
+  const { member: userId } = req.query;
+  const { status: state } = req.body;
+
+  const stateId = (await TaskStateModel.findOne({ stateName: state }))._id;
+  const result = await MemberTaskModel.updateOne(
     { taskId, userId },
     { stateId }
   );
 
-  return updatedTask;
+  responseIfModified(result, res);
 };

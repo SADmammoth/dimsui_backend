@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
 
 let MemberTaskSchema = new Schema({
   taskId: Schema.Types.ObjectId,
@@ -8,4 +9,4 @@ let MemberTaskSchema = new Schema({
 
 let MemberTaskModel = mongoose.model('memberTask', MemberTaskSchema);
 
-export default MemberTaskModel;
+module.exports = MemberTaskModel;

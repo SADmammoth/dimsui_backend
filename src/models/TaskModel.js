@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
 
 let TaskSchema = new Schema({
   taskName: Schema.Types.String,
@@ -9,4 +10,4 @@ let TaskSchema = new Schema({
 
 let TaskModel = mongoose.model('task', TaskSchema);
 
-export default TaskModel;
+module.exports = TaskModel;

@@ -1,12 +1,13 @@
-import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
-import UserModel from '../models/UserModel';
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+const UserModel = require('../models/UserModel');
 
-var params = {};
+const params = {};
 params.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 params.secretOrKey = process.env.AUTH_SECRET;
 
 const jwtStrategy = new JwtStrategy(params, (payload, done) => {
-  UserModel.findOne({ userId: payload.userId })
+  UserModel.findOne({ login: payload.login })
     .then((user = null) => {
       done(null, user);
     })
@@ -15,4 +16,4 @@ const jwtStrategy = new JwtStrategy(params, (payload, done) => {
     });
 });
 
-export default jwtStrategy;
+module.exports = jwtStrategy;

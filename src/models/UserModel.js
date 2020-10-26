@@ -1,5 +1,6 @@
-import mongoose, { Schema } from 'mongoose';
-import crypto from 'crypto';
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
+const crypto = require('crypto');
 
 const userSchema = new Schema(
   {
@@ -48,4 +49,4 @@ userSchema.methods.checkPassword = function (password) {
 
 const UserModel = mongoose.model('user', userSchema);
 
-export default UserModel;
+module.exports = UserModel;

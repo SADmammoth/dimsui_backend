@@ -1,10 +1,10 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import passport from 'passport';
-import apiRouter from './routers/apiRouter';
-import cookieParser from 'cookie-parser';
-import authRouter from './routers/authRouter';
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const passport = require('passport');
+const apiRouter = require('./routers/apiRouter');
+const cookieParser = require('cookie-parser');
+const authRouter = require('./routers/authRouter');
 
 const port = process.env.PORT || 8080;
 const app = express();

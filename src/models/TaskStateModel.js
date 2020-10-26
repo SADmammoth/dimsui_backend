@@ -1,4 +1,5 @@
-import mongoose, { Schema } from 'mongoose';
+const mongoose = require('mongoose');
+const Schema = require('mongoose').Schema;
 
 let TaskStateSchema = new Schema({
   stateName: Schema.Types.String,
@@ -6,4 +7,4 @@ let TaskStateSchema = new Schema({
 
 let TaskStateModel = mongoose.model('state', TaskStateSchema);
 
-export default TaskStateModel;
+module.exports = TaskStateModel;

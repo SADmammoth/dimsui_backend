@@ -1,31 +1,33 @@
-import express from 'express';
-import membersController from '../controllers/membersController';
-import roleFilter from '../helpers/roleFilter';
+const express = require('express');
+const membersController = require('../controllers/membersController');
+const roleFilter = require('../helpers/roleFilter');
+const ADMIN = require('../helpers/roles').ADMIN;
+const MENTOR = require('../helpers/roles').MENTOR;
 
 var membersRouter = express.Router();
 
 membersRouter.get(
   '/members/profiles',
-  roleFilter('admin', 'mentor'),
+  roleFilter(ADMIN, MENTOR),
   membersController.getMembers
 );
 
 membersRouter.post(
   '/members/profiles',
-  roleFilter('admin'),
+  roleFilter(ADMIN),
   membersController.addMember
 );
 
 membersRouter.put(
   '/members/:id/profile',
-  roleFilter('admin'),
+  roleFilter(ADMIN),
   membersController.editMember
 );
 
 membersRouter.delete(
   '/members/:id/profile',
-  roleFilter('admin'),
+  roleFilter(ADMIN),
   membersController.deleteMember
 );
 
-export default membersRouter;
+module.exports = membersRouter;
