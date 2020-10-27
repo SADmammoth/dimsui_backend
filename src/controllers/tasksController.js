@@ -176,7 +176,7 @@ exports.getMemberTasks = async (req, res) => {
 };
 
 exports.getMemberTracks = async (req, res) => {
-  const { userId } = req.params;
+  const { member: userId } = req.query;
   const user = await MemberModel.find({ userId });
 
   if (!user) {
@@ -217,9 +217,9 @@ exports.trackTask = async (req, res) => {
 
   const trackedTask = await TrackModel.find({ memberTaskId });
 
-  if (!trackedTask || !trackedTask.length) {
+  if (trackedTask.length) {
     res.status(StatusCodes.NOT_MODIFIED);
-    res.json({ message: 'Task is already tracked' });
+    res.send();
     return;
   }
 
