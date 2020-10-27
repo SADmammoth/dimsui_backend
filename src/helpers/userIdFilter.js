@@ -3,7 +3,8 @@ const StatusCodes = require('http-status-codes').StatusCodes;
 
 module.exports = function userIdFilter(req, res, next) {
   if (req.user.role === roles.MEMBER && req.user.userId != req.query.member) {
-    res.status(StatusCodes.UNAUTHORIZED).send();
+    res.status(StatusCodes.UNAUTHORIZED).send('Wrong user id');
+    return;
   }
 
   next();

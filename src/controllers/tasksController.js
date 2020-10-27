@@ -187,28 +187,34 @@ exports.getMemberTracks = async (req, res) => {
 
   const memberTasks = await MemberTaskModel.find({ userId });
 
-  const tracks = await Promise.all(
-    memberTasks.map(async ({ _id: memberTaskId, taskId }) => {
-      const tracks = await TrackModel.find({ memberTaskId });
-      const { taskName } = await TaskModel.findById(taskId);
+  const responseTracks = [];
+  let tracks;
+  let taskName;
 
-      return tracks.map(
-        ({ _id: trackId, memberTaskId, trackNote, trackDate }) => {
-          return {
-            _id: trackId,
-            memberTaskId,
-            taskId,
-            userId,
-            taskName,
-            trackNote,
-            trackDate,
-          };
-        }
+  await Promise.all(
+    memberTasks.map(async ({ _id: memberTaskId, taskId }) => {
+      tracks = await TrackModel.find({ memberTaskId });
+      ({ taskName } = await TaskModel.findById(taskId));
+
+      responseTracks.push(
+        ...tracks.map(
+          ({ _id: trackId, memberTaskId, trackNote, trackDate }) => {
+            return {
+              _id: trackId,
+              memberTaskId,
+              taskId,
+              userId,
+              taskName,
+              trackNote,
+              trackDate,
+            };
+          }
+        )
       );
     })
   );
 
-  res.json(tracks);
+  res.json(responseTracks);
 };
 
 exports.trackTask = async (req, res) => {
